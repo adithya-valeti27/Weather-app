@@ -1,81 +1,61 @@
-import React, { useState, useRef } from 'react';
-import './Weather.css';
-import search_icon from '../assets/search.png';
-import clear_icon from '../assets/clear.png';
-import cloud_icon from '../assets/cloud.png';
-import drizzle_icon from '../assets/drizzle.png';
-import humidity_icon from '../assets/humidity.png';
-import rain_icon from '../assets/rain.png';
-import snow_icon from '../assets/snow.png';
-import wind_icon from '../assets/wind.png';
+import React, { useState, useRef } from "react";
+import "./Weather.css";
+import search_icon from "../assets/search.png";
+import humidity_icon from "../assets/humidity.png";
+import wind_icon from "../assets/wind.png";
 
 const Weather = () => {
   const [error, setError] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const inputRef = useRef();
 
-  // const allIcons = {
-  //   '1000': clear_icon,
-  //   '1003': cloud_icon,
-  //   '1006': cloud_icon,
-  //   '1009': drizzle_icon,
-  //   '1030': drizzle_icon,
-  //   '1063': drizzle_icon,
-  //   '1183': rain_icon,
-  //   '1189': rain_icon,
-  //   '1195': rain_icon,
-  //   '1276': rain_icon,
-  //   '1210': snow_icon,
-  //   '1135': snow_icon,
-  // };
-
-  const getWeatherClass = (conditionCode) => {
-    if (conditionCode >= 1000 && conditionCode <= 1003) return 'clear';
-    if (conditionCode >= 1006 && conditionCode <= 1009) return 'cloudy';
-    if (conditionCode >= 1063 && conditionCode <= 1276) return 'rainy';
-    if (conditionCode >= 1210 && conditionCode <= 1135) return 'snowy';
-    return 'sunny';
+  const getWeatherClass = (dayorNight) => {
+    const hour = parseInt(dayorNight, 10);
+    if (hour >= 6 && hour < 18) return "day";
+    if (hour >= 18 || hour < 6) return "night";
+    return "day";
   };
 
   const weatherQuotes = {
-    Sunny: ['Sunshine is the best medicine'],
-    Rainy: ['Let the rain wash away all the pain of yesterday'],
-    Cloudy: ['Every cloud has a silver lining'],
-    Stormy: ['Storms make trees take deeper roots'],
-    Snowy: ['Kindness is like snow—it beautifies everything it covers'],
-    Windy: ['Kites rise highest against the wind, not with it.'],
-    Overcast: ['Every cloud has a silver lining'],
-    Mist: ['Kindness is like snow—it beautifies everything it covers'],
-    Fog: ['Fog is nature\'s way of showing that not all mysteries need to be solved.'],
+    Sunny: ["Sunshine is the best medicine"],
+    Rainy: ["Let the rain wash away all the pain of yesterday"],
+    Cloudy: ["Every cloud has a silver lining"],
+    Stormy: ["Storms make trees take deeper roots"],
+    Snowy: ["Kindness is like snow—it beautifies everything it covers"],
+    Windy: ["Kites rise highest against the wind, not with it."],
+    Overcast: ["Every cloud has a silver lining"],
+    Mist: ["Kindness is like snow—it beautifies everything it covers"],
+    Fog: [
+      "Fog is natures way of showing that not all mysteries need to be solved.",
+    ],
   };
 
   async function search(city) {
     const trimmedCity = city.trim();
 
-    if (trimmedCity === '') {
-      setError('Please enter a city name');
+    if (trimmedCity === "") {
+      setError("Please enter a city name");
       setWeatherData(null);
-      alert('Please Enter a city name');
+      alert("Please Enter a city name");
       return;
     }
 
     try {
-      const url = `http://api.weatherapi.com/v1/current.json?key=cb511d02283040a397c113418242511&q=${trimmedCity}&aqi=no`;
+      const url = `http://api.weatherapi.com/v1/current.json?key=ea1fd87f39da42c79eb55953242611&q=${trimmedCity}&aqi=no`;
       const response = await fetch(url);
       const data = await response.json();
       console.log(data);
-      console.log(data.current.condition.icon)
-      
+      console.log(data.current.condition.icon);
+      console.log(data.location.localtime.slice(10, 13));
 
       if (response.ok) {
         const localTime = new Date(data.location.localtime);
-        const formattedTime = localTime.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: 'numeric',
+        const formattedTime = localTime.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "numeric",
           hour12: true,
         });
 
-        
         const iconUrl = data.current.condition.icon;
 
         setError(null);
@@ -87,22 +67,23 @@ const Weather = () => {
           time: formattedTime,
           conditionCode: data.current.condition.code,
           quote: weatherQuotes[data.current.condition.text],
-          icon: iconUrl, 
-          country: data.location.country
+          icon: iconUrl,
+          country: data.location.country,
+          dayorNight: data.location.localtime.slice(10, 14),
         });
       } else {
-        setError('City not found');
+        setError("City not found");
         setWeatherData(null);
       }
     } catch (error) {
-      console.error('Error Fetching weather data', error);
-      setError('Error fetching weather data');
+      console.error("Error Fetching weather data", error);
+      setError("Error fetching weather data");
       setWeatherData(null);
     }
   }
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       search(inputRef.current.value);
     }
   };
@@ -112,10 +93,14 @@ const Weather = () => {
   };
 
   return (
-    <div className={`weather ${weatherData ? getWeatherClass(weatherData.conditionCode) : ''}`}>
+    <div
+      className={`weather ${
+        weatherData ? getWeatherClass(weatherData.dayorNight) : ""
+      }`}
+    >
       {weatherData ? (
         <>
-          <p className='quotes'>{weatherData.quote}</p>
+          <p className="quotes">{weatherData.quote}</p>
         </>
       ) : null}
       <div className="search-bar">
@@ -142,7 +127,7 @@ const Weather = () => {
           />
           <p className="temperature">{weatherData.temperature}ºC</p>
           <p className="location">{weatherData.location}</p>
-          <p className='country'>{weatherData.country}</p>
+          <p className="country">{weatherData.country}</p>
           <div className="weather-data">
             <div className="col">
               <img src={humidity_icon} alt="Humidity" />
